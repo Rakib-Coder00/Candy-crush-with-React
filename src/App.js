@@ -61,6 +61,24 @@ const App = () => {
     }
   }
 
+
+
+  const moveIntoSquareBelow = ()=>{
+    for (let i = 0; i < 64 - width; i++){
+      const firstRow = [0, 2, 3, 4, 5, 6, 7]
+      const isFirstRow = firstRow.includes(i)
+      if (isFirstRow && currentColorArrangement[i] === '') {
+        let randomNumber = Math.floor(Math.random() * candyColors.length)
+        currentColorArrangement[i] = candyColors[randomNumber]
+      }
+
+      if ((currentColorArrangement[i + width]) === '') {
+        currentColorArrangement[i + width] = currentColorArrangement[i]
+        currentColorArrangement[i] = ''
+      }
+    }
+  }
+
   const createBoard = ()=>{
     const randomColorArrangement = []
 
@@ -85,6 +103,7 @@ const App = () => {
       checkForRowOfFour()
       checkForColumnOfThree()
       checkForRowOfThree()
+      moveIntoSquareBelow()
 
       setCurrentColorArrangement([ ...currentColorArrangement])
     },100)
