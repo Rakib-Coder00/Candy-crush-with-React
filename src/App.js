@@ -1,172 +1,198 @@
-import { useEffect, useState } from "react"
+import {useEffect, useState} from 'react'
+import ScoreBoard from './components/ScoreBoard'
+import blueCandy from './images/blue-candy.png'
+import greenCandy from './images/green-candy.png'
+import orangeCandy from './images/orange-candy.png'
+import purpleCandy from './images/purple-candy.png'
+import redCandy from './images/red-candy.png'
+import yellowCandy from './images/yellow-candy.png'
+import blank from './images/blank.png'
+import { useCallback } from 'react/cjs/react.development'
 
 const width = 8
-
 const candyColors = [
-  'blue',
-  'green',
-  'orange',
-  'purple',
-  'red',
-  'yellow'
+    blueCandy,
+    orangeCandy,
+    purpleCandy,
+    redCandy,
+    yellowCandy,
+    greenCandy
 ]
 
 const App = () => {
-  const [currentColorArrangement, setCurrentColorArrangement] = useState([])
-  const [squareBeingDragged, setSquareBeingDragged] = useState(null)
-  const [squareBeingReplaced, setSquareBeingReplaced] = useState(null)
+    const [currentColorArrangement, setCurrentColorArrangement] = useState([])
+    const [squareBeingDragged, setSquareBeingDragged] = useState(null)
+    const [squareBeingReplaced, setSquareBeingReplaced] = useState(null)
+    const [scoreDisplay, setScoreDisplay] = useState(0)
 
-  const checkForColumnOfFour = () => {
-    for (let i = 0; i <= 39; i++) {
-      const ColumnOfFour = [i, i + width,i +width *2, i + width * 3]
-      const decidedColor = currentColorArrangement[i]
-      if (ColumnOfFour.every(square => currentColorArrangement[square] === decidedColor)) {
-        ColumnOfFour.forEach(square => currentColorArrangement[square] = '')
-      }
+    const checkForColumnOfFour = useCallback(() => {
+        for (let i = 0; i <= 39; i++) {
+            const columnOfFour = [i, i + width, i + width * 2, i + width * 3]
+            const decidedColor = currentColorArrangement[i]
+            const isBlank = currentColorArrangement[i] === blank
+
+            if (columnOfFour.every(square => currentColorArrangement[square] === decidedColor && !isBlank)) {
+                setScoreDisplay((score) => score + 4)
+                columnOfFour.forEach(square => currentColorArrangement[square] = blank)
+                return true
+            }
+        }
+    },[currentColorArrangement])
+
+    const checkForRowOfFour = useCallback(() => {
+        for (let i = 0; i < 64; i++) {
+            const rowOfFour = [i, i + 1, i + 2, i + 3]
+            const decidedColor = currentColorArrangement[i]
+            const notValid = [5, 6, 7, 13, 14, 15, 21, 22, 23, 29, 30, 31, 37, 38, 39, 45, 46, 47, 53, 54, 55, 62, 63, 64]
+            const isBlank = currentColorArrangement[i] === blank
+
+            if (notValid.includes(i)) continue
+
+            if (rowOfFour.every(square => currentColorArrangement[square] === decidedColor && !isBlank)) {
+                setScoreDisplay((score) => score + 4)
+                rowOfFour.forEach(square => currentColorArrangement[square] = blank)
+                return true
+            }
+        }
+    },[currentColorArrangement])
+
+    const checkForColumnOfThree = useCallback(() => {
+        for (let i = 0; i <= 47; i++) {
+            const columnOfThree = [i, i + width, i + width * 2]
+            const decidedColor = currentColorArrangement[i]
+            const isBlank = currentColorArrangement[i] === blank
+
+            if (columnOfThree.every(square => currentColorArrangement[square] === decidedColor && !isBlank)) {
+                setScoreDisplay((score) => score + 3)
+                columnOfThree.forEach(square => currentColorArrangement[square] = blank)
+                return true
+            }
+        }
+    },[currentColorArrangement])
+
+    const checkForRowOfThree = useCallback(() => {
+        for (let i = 0; i < 64; i++) {
+            const rowOfThree = [i, i + 1, i + 2]
+            const decidedColor = currentColorArrangement[i]
+            const notValid = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55, 63, 64]
+            const isBlank = currentColorArrangement[i] === blank
+
+            if (notValid.includes(i)) continue
+
+            if (rowOfThree.every(square => currentColorArrangement[square] === decidedColor && !isBlank)) {
+                setScoreDisplay((score) => score + 3)
+                rowOfThree.forEach(square => currentColorArrangement[square] = blank)
+                return true
+            }
+        }
+    },[currentColorArrangement])
+
+    const moveIntoSquareBelow = useCallback(() => {
+        for (let i = 0; i <= 55; i++) {
+            const firstRow = [0, 1, 2, 3, 4, 5, 6, 7]
+            const isFirstRow = firstRow.includes(i)
+
+            if (isFirstRow && currentColorArrangement[i] === blank) {
+                let randomNumber = Math.floor(Math.random() * candyColors.length)
+                currentColorArrangement[i] = candyColors[randomNumber]
+            }
+
+            if ((currentColorArrangement[i + width]) === blank) {
+                currentColorArrangement[i + width] = currentColorArrangement[i]
+                currentColorArrangement[i] = blank
+            }
+        }
+    },[currentColorArrangement])
+
+    const dragStart = (e) => {
+        setSquareBeingDragged(e.target)
     }
-  }
-
-  const checkForRowOfFour = () => {
-    for (let i = 0; i < 64; i++) {
-      const RowOfFour = [i, i + 1, i+ 2, i + 3]
-      const decidedColor = currentColorArrangement[i]
-      const notValid = [5, 6, 7, 13, 14, 15, 21, 22, 23, 29, 30, 31, 37, 38, 39, 45, 46, 47, 53, 54, 55, 52,  63, 64]
-      if (notValid.includes(i)) continue
-
-      if (RowOfFour.every(square => currentColorArrangement[square] === decidedColor)) {
-        RowOfFour.forEach(square => currentColorArrangement[square] = '')
-      }
+    const dragDrop = (e) => {
+        setSquareBeingReplaced(e.target)
     }
-  }
+    const dragEnd = () => {
+        const squareBeingDraggedId = parseInt(squareBeingDragged.getAttribute('data-id'))
+        const squareBeingReplacedId = parseInt(squareBeingReplaced.getAttribute('data-id'))
 
-  const checkForColumnOfThree = () => {
-    for (let i = 0; i <= 47; i++) {
-      const ColumnOfThree = [i, i + width,i +width *2]
-      const decidedColor = currentColorArrangement[i]
-      if (ColumnOfThree.every(square => currentColorArrangement[square] === decidedColor)) {
-        ColumnOfThree.forEach(square => currentColorArrangement[square] = '')
-      }
+        currentColorArrangement[squareBeingReplacedId] = squareBeingDragged.getAttribute('src')
+        currentColorArrangement[squareBeingDraggedId] = squareBeingReplaced.getAttribute('src')
+
+        const validMoves = [
+            squareBeingDraggedId - 1,
+            squareBeingDraggedId - width,
+            squareBeingDraggedId + 1,
+            squareBeingDraggedId + width
+        ]
+
+        const validMove = validMoves.includes(squareBeingReplacedId)
+
+        const isAColumnOfFour = checkForColumnOfFour()
+        const isARowOfFour = checkForRowOfFour()
+        const isAColumnOfThree = checkForColumnOfThree()
+        const isARowOfThree = checkForRowOfThree()
+
+        if (squareBeingReplacedId &&
+            validMove &&
+            (isARowOfThree || isARowOfFour || isAColumnOfFour || isAColumnOfThree)) {
+            setSquareBeingDragged(null)
+            setSquareBeingReplaced(null)
+        } else {
+            currentColorArrangement[squareBeingReplacedId] = squareBeingReplaced.getAttribute('src')
+            currentColorArrangement[squareBeingDraggedId] = squareBeingDragged.getAttribute('src')
+            setCurrentColorArrangement([...currentColorArrangement])
+        }
     }
-  }
 
-  const checkForRowOfThree = () => {
-    for (let i = 0; i < 64; i++) {
-      const RowOfThree = [i, i + 1, i + 2]
-      const decidedColor = currentColorArrangement[i]
-      const notValid = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55, 63, 64]
-      if (notValid.includes(i)) continue
 
-      if (RowOfThree.every(square => currentColorArrangement[square] === decidedColor)) {
-        RowOfThree.forEach(square => currentColorArrangement[square] = '')
-      }
+    const createBoard = () => {
+        const randomColorArrangement = []
+        for (let i = 0; i < width * width; i++) {
+            const randomColor = candyColors[Math.floor(Math.random() * candyColors.length)]
+            randomColorArrangement.push(randomColor)
+        }
+        setCurrentColorArrangement(randomColorArrangement)
     }
-  }
+
+    useEffect(() => {
+        createBoard()
+    }, [])
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            checkForColumnOfFour()
+            checkForRowOfFour()
+            checkForColumnOfThree()
+            checkForRowOfThree()
+            moveIntoSquareBelow()
+            setCurrentColorArrangement([...currentColorArrangement])
+        }, 100)
+        return () => clearInterval(timer)
+    }, [checkForColumnOfFour, checkForRowOfFour, checkForColumnOfThree, checkForRowOfThree, moveIntoSquareBelow, currentColorArrangement])
 
 
-
-  const moveIntoSquareBelow = ()=>{
-    for (let i = 0; i <= 55; i++){
-      const firstRow = [0, 2, 3, 4, 5, 6, 7]
-      const isFirstRow = firstRow.includes(i)
-
-
-      if (isFirstRow && currentColorArrangement[i] === '') {
-        let randomNumber = Math.floor(Math.random() * candyColors.length)
-        currentColorArrangement[i] = candyColors[randomNumber]
-      }
-
-      if ((currentColorArrangement[i + width]) === '') {
-        currentColorArrangement[i + width] = currentColorArrangement[i]
-        currentColorArrangement[i] = ''
-      }
-    }
-  }
-
-
-
-  const dragStart = (e)=>{
-    console.log(e.target);
-    console.log('dragStart');
-    setSquareBeingDragged(e.target)
-  }
-  const dragDrop = (e)=>{
-    // console.log(e.target);
-    console.log('dragDrop');
-    setSquareBeingReplaced(e.target)
-  }
-  const dragEnd = (e)=>{
-    // console.log(e.target);
-    console.log('dragEnd');
-    const squareBeingDraggedId = parseInt(squareBeingDragged.getAttribute('data-id'))
-    const squareBeingReplacedId = parseInt(squareBeingReplaced.getAttribute('data-id'))
-
-    console.log(squareBeingDraggedId, squareBeingReplacedId );
-    
-  }
-
-
-
-
-
-  const createBoard = ()=>{
-    const randomColorArrangement = []
-
-    for (let i = 0; i< width * width; i++){
-
-      const ranNum = Math.floor(Math.random() * candyColors.length)
-
-      const randomColor = candyColors[ranNum]
-      randomColorArrangement.push(randomColor)
-    }
-    setCurrentColorArrangement(randomColorArrangement)
-  }
-  
-
-
-
-
-  useEffect(() => {
-    createBoard()
-  }, [])
-
-  useEffect(() => {
-    const timer = setInterval(()=>{
-      checkForColumnOfFour()
-      checkForRowOfFour()
-      checkForColumnOfThree()
-      checkForRowOfThree()
-      moveIntoSquareBelow()
-
-      setCurrentColorArrangement([ ...currentColorArrangement])
-    },100)
-    return () => clearInterval(timer)
-  }, [checkForColumnOfFour, checkForRowOfFour ,checkForColumnOfThree, checkForRowOfThree, currentColorArrangement])
-  
-
-  // console.log(currentColorArrangement);
-
-  return (
-    <div className="app">
-      <div className="game">
-        {currentColorArrangement.map((candyColor, index) =>(
-          <img
-            key={index}
-            style={{backgroundColor: candyColor}}
-            alt={candyColor}
-            data-id={index}
-            draggable={true}
-            onDragStart={dragStart}
-            onDragOver={(e)=> e.preventDefault()}
-            onDragEnter={(e)=> e.preventDefault()}
-            onDragLeave={(e)=> e.preventDefault()}
-            onDrop={dragDrop}
-            onDragEnd={dragEnd}
-          />
-        ))}
-     </div>
-    </div>
-  );
+    return (
+        <div className="app">
+            <div className="game">
+                {currentColorArrangement.map((candyColor, index) => (
+                    <img
+                        key={index}
+                        src={candyColor}
+                        alt={candyColor}
+                        data-id={index}
+                        draggable={true}
+                        onDragStart={dragStart}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDragEnter={(e) => e.preventDefault()}
+                        onDragLeave={(e) => e.preventDefault()}
+                        onDrop={dragDrop}
+                        onDragEnd={dragEnd}
+                    />
+                ))}
+            </div>
+            <ScoreBoard score={scoreDisplay}/>
+        </div>
+    )
 }
 
-export default App;
- 
+export default App
+
